@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Mi Dieta</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1A1714">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mi Dieta">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-top">
+      <h1 class="logo">Mi Dieta</h1>
+      <button id="btn-rules" class="btn-icon" aria-label="Reglas">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      </button>
+    </div>
+    <div class="date-nav">
+      <button id="prev-day" class="btn-icon" aria-label="Día anterior">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button id="current-date" class="date-display"></button>
+      <button id="next-day" class="btn-icon" aria-label="Día siguiente">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Day Summary (sticky) -->
+  <div id="day-summary" class="day-summary">
+    <div class="summary-calories">
+      <span id="summary-status" class="status-dot">✅</span>
+      <span id="summary-kcal" class="kcal-value">0</span>
+      <span class="kcal-label">kcal</span>
+    </div>
+    <div class="summary-macros">
+      <div class="macro"><span class="macro-val" id="summary-p">0</span><span class="macro-label">Prot</span></div>
+      <div class="macro"><span class="macro-val" id="summary-c">0</span><span class="macro-label">Carbs</span></div>
+      <div class="macro"><span class="macro-val" id="summary-g">0</span><span class="macro-label">Grasa</span></div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main id="main-content">
+    <!-- Planner View -->
+    <div id="view-planner" class="view active">
+      <div id="meals-container"></div>
+      <button id="btn-save" class="btn-save">Guardar día</button>
+    </div>
+
+    <!-- History View -->
+    <div id="view-history" class="view">
+      <div id="history-avg" class="history-avg"></div>
+      <div id="history-list" class="history-list"></div>
+      <div id="history-empty" class="empty-state">
+        <p>Aún no has guardado ningún día</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Rules Modal -->
+  <div id="rules-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Mis 5 Reglas</h2>
+        <button id="close-rules" class="btn-icon" aria-label="Cerrar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="rule">
+          <span class="rule-num">1</span>
+          <div>
+            <strong>Proteína primero</strong>
+            <p>Come proteína y vegetales antes del carbo</p>
+          </div>
+        </div>
+        <div class="rule">
+          <span class="rule-num">2</span>
+          <div>
+            <strong>Un carbo denso por comida</strong>
+            <p>Arepa O arroz O pasta O yuca O pan, nunca dos juntos</p>
+          </div>
+        </div>
+        <div class="rule">
+          <span class="rule-num">3</span>
+          <div>
+            <strong>Café sin acompañante sólido</strong>
+            <p>Café con azúcar OK, sin galletas ni pan</p>
+          </div>
+        </div>
+        <div class="rule">
+          <span class="rule-num">4</span>
+          <div>
+            <strong>Post-turno pre-aprobado</strong>
+            <p>Solo opciones preparadas de antemano a las 11pm</p>
+          </div>
+        </div>
+        <div class="rule">
+          <span class="rule-num">5</span>
+          <div>
+            <strong>Mano = medida</strong>
+            <p>Proteína = palma, carbo = puño, vegetales = ilimitados</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Detail Modal -->
+  <div id="detail-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="detail-title">Detalle del día</h2>
+        <button id="close-detail" class="btn-icon" aria-label="Cerrar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="detail-body"></div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-view="planner">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      <span>Planificar</span>
+    </button>
+    <button class="nav-btn" data-view="history">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span>Historial</span>
+    </button>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>
