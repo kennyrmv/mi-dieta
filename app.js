@@ -1,9 +1,8 @@
 /* ========================================
-   Mi Dieta — App Logic
+   Mi Dieta — App Logic + Recetas
    ======================================== */
 
 // ---- 167 Alimentos (corregidos) ----
-// n=nombre, q=cantidad base, k=kcal, c=carbos, p=proteina, g=grasa, u='g'(per100g)|'u'(per unit)
 const FOODS=[
 {n:"+ Proteina",q:"120",k:68,c:7,p:10,g:0,u:"u"},
 {n:"+ Proteína Yogurt",q:"100 g",k:55,c:3,p:10,g:0,u:"g"},
@@ -180,23 +179,19 @@ function getLight(food) {
   const k = food.k;
   const ratio = k > 0 ? (food.p / k) * 100 : 0;
 
-  // Explicit GREEN
   const greenNames = ['brocoli','brócoli','tomate','repollo','espárrago','esparrago','zanahoria','fresa','arándano','arandano','clara de huevo','coca cola 0'];
   if (greenNames.some(g => name.includes(g))) return 'green';
   if (name === 'huevo') return 'green';
   if (name.includes('gelatina')) return 'green';
 
-  // Explicit YELLOW
   const yellowNames = ['manzana','kiwi','uva','banana','plátano','platano'];
   if (yellowNames.some(y => name.includes(y)) && !name.includes('zumo') && !name.includes('ladron')) return 'yellow';
   const yellowCarbNames = ['arepa','arroz','pasta','yuca','aguacate','patata hervida','cuscús','cuscus'];
   if (yellowCarbNames.some(y => name === y || name.startsWith(y))) return 'yellow';
 
-  // Explicit RED
   const redNames = ['galleta','croissant','doritos','nachos','churros','mayonesa','azucar','azúcar','miel','pepitos','cocosette','pirulin','ferrero','tarta','bizcocho','magdalena','granola','cotufas'];
   if (redNames.some(r => name.includes(r))) return 'red';
 
-  // Ratio-based
   if (ratio >= 12) return 'green';
   if (ratio >= 8 && k < 250) return 'green';
   if (k >= 350 && ratio < 5) return 'red';
@@ -234,6 +229,7 @@ function initMeals() {
 
 // ---- LocalStorage ----
 const STORE_KEY = 'midieta_history';
+const RECIPES_KEY = 'midieta_recipes';
 
 function loadHistory() {
   try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; }
@@ -242,6 +238,15 @@ function loadHistory() {
 
 function saveHistory(history) {
   localStorage.setItem(STORE_KEY, JSON.stringify(history));
+}
+
+function loadRecipes() {
+  try { return JSON.parse(localStorage.getItem(RECIPES_KEY)) || []; }
+  catch { return []; }
+}
+
+function saveRecipesStore(recipes) {
+  localStorage.setItem(RECIPES_KEY, JSON.stringify(recipes));
 }
 
 function loadDayData(date) {
@@ -261,6 +266,108 @@ function loadDayData(date) {
     return true;
   }
   return false;
+}
+
+// ---- Recipes ----
+function saveAsRecipe(mealKey) {
+  const items = meals[mealKey].filter(i => i.food && i.qty > 0);
+  if (items.length === 0) {
+    showToast('Agrega alimentos primero');
+    return;
+  }
+
+  // Show recipe name modal
+  showRecipeNameModal((name) => {
+    const recipes = loadRecipes();
+    const totalK = items.reduce((s, i) => {
+      const mult = i.food.u === 'g' ? i.qty / 100 : i.qty;
+      return s + Math.round(i.food.k * mult);
+    }, 0);
+
+    recipes.push({
+      id: 'r_' + Date.now(),
+      name: name,
+      items: items.map(i => ({ food: { ...i.food }, qty: i.qty })),
+      totalK
+    });
+    saveRecipesStore(recipes);
+    showToast('📋 Receta guardada: ' + name);
+    render();
+  });
+}
+
+function applyRecipe(recipeId, mealKey, startIdx) {
+  const recipes = loadRecipes();
+  const recipe = recipes.find(r => r.id === recipeId);
+  if (!recipe) return;
+
+  const mealDef = MEALS.find(m => m.key === mealKey);
+  if (!mealDef) return;
+
+  // Fill starting from startIdx, using all available empty slots
+  let slotIdx = 0;
+  for (let i = 0; i < mealDef.max && slotIdx < recipe.items.length; i++) {
+    if (!meals[mealKey][i].food) {
+      const ri = recipe.items[slotIdx];
+      const foundFood = FOODS.find(f => f.n === ri.food.n) || ri.food;
+      meals[mealKey][i] = { food: foundFood, qty: ri.qty };
+      slotIdx++;
+    }
+  }
+
+  if (slotIdx < recipe.items.length) {
+    showToast(`Se agregaron ${slotIdx} de ${recipe.items.length} items (sin espacio)`);
+  }
+
+  render();
+}
+
+function deleteRecipe(recipeId) {
+  const recipes = loadRecipes();
+  const idx = recipes.findIndex(r => r.id === recipeId);
+  if (idx === -1) return;
+  const name = recipes[idx].name;
+  recipes.splice(idx, 1);
+  saveRecipesStore(recipes);
+  showToast('Receta eliminada: ' + name);
+  renderRecipes();
+}
+
+// ---- Recipe Name Modal ----
+function showRecipeNameModal(callback) {
+  const modal = document.getElementById('recipe-name-modal');
+  const input = document.getElementById('recipe-name-input');
+  const btnSave = document.getElementById('recipe-name-save');
+  const btnCancel = document.getElementById('recipe-name-cancel');
+
+  input.value = '';
+  modal.classList.add('show');
+  setTimeout(() => input.focus(), 100);
+
+  function cleanup() {
+    modal.classList.remove('show');
+    btnSave.removeEventListener('click', onSave);
+    btnCancel.removeEventListener('click', onCancel);
+    input.removeEventListener('keydown', onKey);
+  }
+
+  function onSave() {
+    const name = input.value.trim();
+    if (!name) { input.focus(); return; }
+    cleanup();
+    callback(name);
+  }
+
+  function onCancel() { cleanup(); }
+
+  function onKey(e) {
+    if (e.key === 'Enter') onSave();
+    if (e.key === 'Escape') onCancel();
+  }
+
+  btnSave.addEventListener('click', onSave);
+  btnCancel.addEventListener('click', onCancel);
+  input.addEventListener('keydown', onKey);
 }
 
 // ---- Calculations ----
@@ -322,11 +429,15 @@ function renderMeals() {
     section.className = 'meal-section';
 
     const mealCalc = calcMeal(meal.key);
+    const hasItems = meals[meal.key].some(i => i.food);
 
     section.innerHTML = `
       <div class="meal-header">
         <span class="meal-title">${meal.emoji} ${meal.title}</span>
-        <span class="meal-subtitle">${Math.round(mealCalc.k)} kcal</span>
+        <div class="meal-header-right">
+          ${hasItems ? `<button class="btn-save-recipe" data-meal="${meal.key}" title="Guardar como receta">📋</button>` : ''}
+          <span class="meal-subtitle">${Math.round(mealCalc.k)} kcal</span>
+        </div>
       </div>
       <div class="meal-items" id="items-${meal.key}"></div>
     `;
@@ -351,7 +462,7 @@ function createItemEl(mealKey, idx, item) {
   if (!item.food) {
     div.innerHTML = `
       <div class="food-search-wrap">
-        <input type="text" class="food-search" placeholder="Buscar alimento..."
+        <input type="text" class="food-search" placeholder="Buscar alimento o receta..."
                data-meal="${mealKey}" data-idx="${idx}" autocomplete="off">
         <div class="search-results" id="sr-${mealKey}-${idx}"></div>
       </div>
@@ -389,15 +500,28 @@ function createItemEl(mealKey, idx, item) {
   return div;
 }
 
-// ---- Search ----
+// ---- Search (foods + recipes) ----
 function normalize(str) {
   return str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-function searchFoods(query) {
+function searchAll(query) {
   if (!query || query.length < 1) return [];
   const q = normalize(query);
-  return FOODS.filter(f => normalize(f.n).includes(q)).slice(0, 8);
+
+  // Search recipes first
+  const recipes = loadRecipes()
+    .filter(r => normalize(r.name).includes(q))
+    .slice(0, 3)
+    .map(r => ({ type: 'recipe', data: r }));
+
+  // Then foods
+  const foods = FOODS
+    .filter(f => normalize(f.n).includes(q))
+    .slice(0, 8)
+    .map(f => ({ type: 'food', data: f }));
+
+  return [...recipes, ...foods];
 }
 
 function showSearchResults(input, results) {
@@ -411,15 +535,27 @@ function showSearchResults(input, results) {
     return;
   }
 
-  container.innerHTML = results.map((f, i) => {
-    const light = getLight(f);
-    const kcalLabel = f.u === 'g' ? `${f.k} kcal/100g` : `${f.k} kcal`;
-    return `<div class="search-result-item" data-food-idx="${FOODS.indexOf(f)}"
-                data-meal="${mealKey}" data-item-idx="${idx}">
-      <span class="sr-light ${light}"></span>
-      <span class="sr-name">${f.n}</span>
-      <span class="sr-kcal">${kcalLabel}</span>
-    </div>`;
+  container.innerHTML = results.map(item => {
+    if (item.type === 'recipe') {
+      const r = item.data;
+      const itemCount = r.items.length;
+      return `<div class="search-result-item recipe-result" data-recipe-id="${r.id}"
+                  data-meal="${mealKey}" data-item-idx="${idx}">
+        <span class="sr-recipe-icon">📋</span>
+        <span class="sr-name">${r.name}</span>
+        <span class="sr-kcal">${r.totalK} kcal · ${itemCount} items</span>
+      </div>`;
+    } else {
+      const f = item.data;
+      const light = getLight(f);
+      const kcalLabel = f.u === 'g' ? `${f.k} kcal/100g` : `${f.k} kcal`;
+      return `<div class="search-result-item" data-food-idx="${FOODS.indexOf(f)}"
+                  data-meal="${mealKey}" data-item-idx="${idx}">
+        <span class="sr-light ${light}"></span>
+        <span class="sr-name">${f.n}</span>
+        <span class="sr-kcal">${kcalLabel}</span>
+      </div>`;
+    }
   }).join('');
 
   container.classList.add('show');
@@ -462,7 +598,6 @@ function renderHistory() {
 
   emptyEl.style.display = 'none';
 
-  // 7-day average
   const last7 = dates.slice(0, 7);
   const avg = Math.round(last7.reduce((s, d) => s + (history[d].totalKcal || 0), 0) / last7.length);
   avgEl.innerHTML = `
@@ -541,6 +676,37 @@ function showDayDetail(date) {
   document.getElementById('detail-modal').classList.add('show');
 }
 
+// ---- Recipes View ----
+function renderRecipes() {
+  const recipes = loadRecipes();
+  const listEl = document.getElementById('recipes-list');
+  const emptyEl = document.getElementById('recipes-empty');
+
+  if (recipes.length === 0) {
+    listEl.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+
+  listEl.innerHTML = recipes.map(r => {
+    const itemNames = r.items.map(i => i.food.n).join(', ');
+    return `<div class="recipe-card" data-recipe-id="${r.id}">
+      <div class="recipe-card-top">
+        <div class="recipe-card-info">
+          <span class="recipe-card-name">📋 ${r.name}</span>
+          <span class="recipe-card-detail">${r.items.length} items · ${r.totalK} kcal</span>
+        </div>
+        <button class="btn-delete-recipe" data-recipe-id="${r.id}" title="Eliminar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+      </div>
+      <div class="recipe-card-foods">${itemNames}</div>
+    </div>`;
+  }).join('');
+}
+
 // ---- Toast ----
 function showToast(msg) {
   let toast = document.querySelector('.toast');
@@ -608,6 +774,7 @@ function initEvents() {
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       document.getElementById(`view-${view}`).classList.add('active');
       if (view === 'history') renderHistory();
+      if (view === 'recipes') renderRecipes();
     });
   });
 
@@ -630,11 +797,16 @@ function initEvents() {
     if (e.target === e.currentTarget) e.currentTarget.classList.remove('show');
   });
 
+  // Recipe name modal overlay close
+  document.getElementById('recipe-name-modal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) e.currentTarget.classList.remove('show');
+  });
+
   // Delegated events on main content
   document.getElementById('main-content').addEventListener('input', (e) => {
     // Food search
     if (e.target.classList.contains('food-search')) {
-      const results = searchFoods(e.target.value);
+      const results = searchAll(e.target.value);
       showSearchResults(e.target, results);
       activeSearch = e.target;
     }
@@ -644,7 +816,6 @@ function initEvents() {
       const idx = +e.target.dataset.idx;
       const val = parseFloat(e.target.value) || 0;
       meals[mk][idx].qty = val;
-      // Update macros display
       const item = meals[mk][idx];
       const v = calcItem(item);
       const parent = e.target.closest('.meal-item');
@@ -656,7 +827,6 @@ function initEvents() {
         macroVals[3].textContent = v.g;
       }
       updateSummary();
-      // Update meal subtitle
       const mealCalc = calcMeal(mk);
       const section = parent.closest('.meal-section');
       if (section) {
@@ -667,9 +837,19 @@ function initEvents() {
   });
 
   document.getElementById('main-content').addEventListener('click', (e) => {
-    // Select food from search results
+    // Select RECIPE from search results
+    const recipeResult = e.target.closest('.recipe-result');
+    if (recipeResult) {
+      const recipeId = recipeResult.dataset.recipeId;
+      const mk = recipeResult.dataset.meal;
+      const itemIdx = +recipeResult.dataset.itemIdx;
+      applyRecipe(recipeId, mk, itemIdx);
+      return;
+    }
+
+    // Select FOOD from search results
     const srItem = e.target.closest('.search-result-item');
-    if (srItem) {
+    if (srItem && !srItem.classList.contains('recipe-result')) {
       const foodIdx = +srItem.dataset.foodIdx;
       const mk = srItem.dataset.meal;
       const itemIdx = +srItem.dataset.itemIdx;
@@ -693,6 +873,20 @@ function initEvents() {
       return;
     }
 
+    // Save as recipe button
+    const saveRecipeBtn = e.target.closest('.btn-save-recipe');
+    if (saveRecipeBtn) {
+      saveAsRecipe(saveRecipeBtn.dataset.meal);
+      return;
+    }
+
+    // Delete recipe in recipes view
+    const deleteRecipeBtn = e.target.closest('.btn-delete-recipe');
+    if (deleteRecipeBtn) {
+      deleteRecipe(deleteRecipeBtn.dataset.recipeId);
+      return;
+    }
+
     // History item click
     const histItem = e.target.closest('.history-item');
     if (histItem) {
@@ -706,7 +900,7 @@ function initEvents() {
     if (e.target.classList.contains('food-search')) {
       activeSearch = e.target;
       if (e.target.value.length > 0) {
-        const results = searchFoods(e.target.value);
+        const results = searchAll(e.target.value);
         showSearchResults(e.target, results);
       }
     }

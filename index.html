@@ -62,7 +62,35 @@
         <p>Aún no has guardado ningún día</p>
       </div>
     </div>
+
+    <!-- Recipes View -->
+    <div id="view-recipes" class="view">
+      <div class="recipes-header">
+        <p class="recipes-hint">Tus recetas guardadas. Búscalas por nombre desde cualquier comida.</p>
+      </div>
+      <div id="recipes-list" class="recipes-list"></div>
+      <div id="recipes-empty" class="empty-state">
+        <p>Aún no tienes recetas</p>
+        <p class="empty-hint">Agrega alimentos a una comida y toca 📋 para guardarla como receta</p>
+      </div>
+    </div>
   </main>
+
+  <!-- Recipe Name Modal -->
+  <div id="recipe-name-modal" class="modal-overlay">
+    <div class="modal modal-small">
+      <div class="modal-header">
+        <h2>Nombre de la receta</h2>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="recipe-name-input" class="recipe-name-field" placeholder="Ej: Desayuno proteico" autocomplete="off">
+        <div class="modal-actions">
+          <button id="recipe-name-cancel" class="btn-modal-cancel">Cancelar</button>
+          <button id="recipe-name-save" class="btn-modal-save">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Rules Modal -->
   <div id="rules-modal" class="modal-overlay">
@@ -135,6 +163,10 @@
     <button class="nav-btn" data-view="history">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       <span>Historial</span>
+    </button>
+    <button class="nav-btn" data-view="recipes">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span>Recetas</span>
     </button>
   </nav>
 

@@ -781,6 +781,193 @@ body {
   border-radius: 4px;
 }
 
+/* ---- Save Recipe Button (meal header) ---- */
+.meal-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-save-recipe {
+  background: var(--accent-muted);
+  border: 1px solid rgba(212, 113, 78, 0.2);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background var(--transition);
+  line-height: 1;
+}
+
+.btn-save-recipe:active {
+  background: var(--accent-glow);
+}
+
+/* ---- Recipe in search results ---- */
+.recipe-result {
+  background: var(--accent-muted);
+  border-left: 3px solid var(--accent) !important;
+}
+
+.recipe-result:active {
+  background: var(--accent-glow) !important;
+}
+
+.sr-recipe-icon {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+/* ---- Recipes View ---- */
+.recipes-header {
+  padding: 12px 4px;
+}
+
+.recipes-hint {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.recipes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recipe-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  transition: border-color var(--transition);
+}
+
+.recipe-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.recipe-card-info {
+  flex: 1;
+}
+
+.recipe-card-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.recipe-card-detail {
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.recipe-card-foods {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-delete-recipe {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color var(--transition);
+  flex-shrink: 0;
+}
+
+.btn-delete-recipe:active {
+  color: var(--red);
+}
+
+.empty-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  opacity: 0.7;
+}
+
+/* ---- Recipe Name Modal ---- */
+.modal-small {
+  border-radius: 16px;
+  max-width: 340px;
+  margin: auto;
+  max-height: unset;
+  padding-bottom: 0;
+}
+
+.modal-small .modal-header {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.recipe-name-field {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 1rem;
+  padding: 12px 14px;
+  outline: none;
+  margin-bottom: 16px;
+}
+
+.recipe-name-field:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-muted);
+}
+
+.recipe-name-field::placeholder {
+  color: var(--text-muted);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 16px;
+}
+
+.btn-modal-cancel {
+  flex: 1;
+  padding: 10px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-modal-save {
+  flex: 1;
+  padding: 10px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-modal-save:active {
+  background: var(--accent-hover);
+}
+
 /* ---- Utilities ---- */
 .text-green { color: var(--green); }
 .text-yellow { color: var(--yellow); }
